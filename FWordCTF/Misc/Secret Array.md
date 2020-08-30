@@ -34,3 +34,49 @@ socket.send(("DONE "+" ".join(str(i) for i in b)+'\n').encode('ASCII'))
 socket.recv(2048)
 print(socket.recv(2048))
 ```
+
+#### Alternatively using pwntools.
+
+```python
+#!/usr/bin/env python3
+
+from pwn import *
+
+p = remote("secretarray.fword.wtf",1337)
+msg = p.recv()
+print("recived msg")
+
+arr=[]
+
+p.sendline(b"0 1")
+temp1 = int(p.recvline().decode().replace("\n",""))
+p.sendline(b"1 2")
+temp2 = int(p.recvline().decode().replace("\n",""))
+p.sendline(b"0 2")
+temp3 = int(p.recvline().decode().replace("\n",""))
+
+tempA = temp1 + temp3 - temp2
+
+#arr.append(round(tempA / 2))
+arr.append(tempA // 2)
+arr.append(temp1 - arr[0])
+arr.append(temp2 - arr[1])
+
+for i in range(3, 1337):
+        print(i)
+        p.sendline("{} {}".format(i-1, i).encode())
+
+        temp1 = int(p.recvline().decode().replace("\n",""))
+        arr.append(temp1 - arr[i-1])
+
+print("\n" + str(len(arr)))
+print("Finished!")
+
+string = "DONE"
+for i in arr:
+        string += " {}".format(i)
+p.sendline(string.encode())
+
+print(p.recvline().decode())
+p.close()
+```
